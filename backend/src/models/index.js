@@ -15,7 +15,7 @@ Usuario.belongsTo(Rol, { foreignKey: 'rol_id' });
 
 // Categoria - Producto
 Categoria.hasMany(Producto, { foreignKey: 'categoria_id' });
-Producto.belongsTo(Categoria, { foreignKey: 'categoria_id' });
+Producto.belongsTo(Categoria, { foreignKey: 'categoria_id', as: 'Categoria' });
 
 // Marca - Producto
 Marca.hasMany(Producto, { foreignKey: 'marca_id' });
@@ -23,7 +23,7 @@ Producto.belongsTo(Marca, { foreignKey: 'marca_id' });
 
 // Proveedor - Producto
 Proveedor.hasMany(Producto, { foreignKey: 'proveedor_id' });
-Producto.belongsTo(Categoria, { foreignKey: 'categoria_id', as: 'Categoria' });
+Producto.belongsTo(Proveedor, { foreignKey: 'proveedor_id' });
 
 // Producto - Lote
 Producto.hasMany(Lote, { foreignKey: 'producto_id' });
