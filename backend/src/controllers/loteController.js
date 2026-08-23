@@ -1,5 +1,5 @@
-const { Lote, Producto, Inventario } = require('../models');
 const { Op } = require('sequelize');
+const { Lote, Producto, Inventario, Movimiento } = require('../models');
 
 // Listar todos los lotes
 async function listarLotes(req, res) {
@@ -31,7 +31,7 @@ async function obtenerLote(req, res) {
     }
 }
 
-// Crear un lote (y su inventario inicial automáticamente)
+// Crear un lote (y su inventario inicial + movimiento de entrada automáticamente)
 async function crearLote(req, res) {
     try {
         const { producto_id, numero_lote, fecha_fabricacion, fecha_vencimiento, cantidad_inicial } = req.body;
@@ -61,7 +61,20 @@ async function crearLote(req, res) {
             cantidad_actual: cantidad_inicial
         });
 
-        res.status(201).json({ lote: nuevoLote, inventario: inventarioInicial });
+        // Registramos automáticamente el movimiento de entrada, si hay cantidad inicial
+        let movimiento = null;
+        if (cantidad_inicial > 0) {
+            movimiento = await Movimiento.create({
+                producto_id,
+                lote_id: nuevoLote.id,
+                tipo: 'entrada',
+                cantidad: cantidad_inicial,
+                motivo: 'Alta de lote nuevo',
+                usuario_id: req.usuario.id
+            });
+        }
+
+        res.status(201).json({ lote: nuevoLote, inventario: inventarioInicial, movimiento });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error al crear el lote' });

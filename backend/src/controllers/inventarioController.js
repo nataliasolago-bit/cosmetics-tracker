@@ -30,21 +30,30 @@ async function inventarioPorProducto(req, res) {
     }
 }
 
-// Inventario con stock bajo (cantidad_actual <= stock_minimo del producto)
+// Inventario con stock bajo (suma de todos los lotes del producto <= stock_minimo)
 async function stockBajo(req, res) {
     try {
-        const inventario = await Inventario.findAll({
-            include: [
-                { model: Producto, required: true },
-                Lote
+        // Sumamos la cantidad_actual de todos los lotes, agrupado por producto
+        const totales = await Inventario.findAll({
+            attributes: [
+                'producto_id',
+                [sequelize.fn('SUM', sequelize.col('cantidad_actual')), 'cantidad_total']
             ],
-            where: sequelize.where(
-                sequelize.col('Inventario.cantidad_actual'),
-                Op.lte,
-                sequelize.col('Producto.stock_minimo')
-            )
+            group: ['producto_id']
         });
-        res.json(inventario);
+
+        const productos = await Producto.findAll();
+        const productosPorId = Object.fromEntries(productos.map((p) => [p.id, p]));
+
+        const bajos = totales
+            .map((item) => ({
+                producto_id: item.producto_id,
+                cantidad_total: Number(item.get('cantidad_total')),
+                Producto: productosPorId[item.producto_id],
+            }))
+            .filter((item) => item.Producto && item.cantidad_total <= item.Producto.stock_minimo);
+
+        res.json(bajos);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error al obtener el inventario con stock bajo' });
