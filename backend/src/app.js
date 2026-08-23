@@ -6,6 +6,7 @@ const marcaRoutes = require('./routes/marcaRoutes');
 const proveedorRoutes = require('./routes/proveedorRoutes');
 const loteRoutes = require('./routes/loteRoutes');
 const inventarioRoutes = require('./routes/inventarioRoutes');
+const movimientoRoutes = require('./routes/movimientoRoutes');
 require('dotenv').config();
 
 const { sequelize } = require('./models');
@@ -26,6 +27,7 @@ app.use('/api/marcas', marcaRoutes);
 app.use('/api/proveedores', proveedorRoutes);
 app.use('/api/lotes', loteRoutes);
 app.use('/api/inventario', inventarioRoutes);
+app.use('/api/movimientos', movimientoRoutes);
 
 const PORT = process.env.PORT || 3000;
 
