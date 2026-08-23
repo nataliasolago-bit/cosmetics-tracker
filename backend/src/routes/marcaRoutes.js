@@ -7,11 +7,12 @@ const {
     actualizarMarca,
     eliminarMarca
 } = require('../controllers/marcaController');
+const { verificarToken, permitirRoles } = require('../middlewares/authMiddleware');
 
-router.get('/', listarMarcas);
-router.get('/:id', obtenerMarca);
-router.post('/', crearMarca);
-router.put('/:id', actualizarMarca);
-router.delete('/:id', eliminarMarca);
+router.get('/', verificarToken, listarMarcas);
+router.get('/:id', verificarToken, obtenerMarca);
+router.post('/', verificarToken, crearMarca);
+router.put('/:id', verificarToken, actualizarMarca);
+router.delete('/:id', verificarToken, permitirRoles('admin'), eliminarMarca);
 
 module.exports = router;

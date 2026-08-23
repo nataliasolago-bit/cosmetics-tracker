@@ -9,15 +9,15 @@ const {
     lotesVencidos,
     lotesProximosAVencer
 } = require('../controllers/loteController');
+const { verificarToken, permitirRoles } = require('../middlewares/authMiddleware');
 
-// Rutas específicas ANTES de la ruta con :id, para que no choquen
-router.get('/vencidos', lotesVencidos);
-router.get('/proximos-a-vencer', lotesProximosAVencer);
+router.get('/vencidos', verificarToken, lotesVencidos);
+router.get('/proximos-a-vencer', verificarToken, lotesProximosAVencer);
 
-router.get('/', listarLotes);
-router.get('/:id', obtenerLote);
-router.post('/', crearLote);
-router.put('/:id', actualizarLote);
-router.delete('/:id', eliminarLote);
+router.get('/', verificarToken, listarLotes);
+router.get('/:id', verificarToken, obtenerLote);
+router.post('/', verificarToken, crearLote);
+router.put('/:id', verificarToken, actualizarLote);
+router.delete('/:id', verificarToken, permitirRoles('admin'), eliminarLote);
 
 module.exports = router;

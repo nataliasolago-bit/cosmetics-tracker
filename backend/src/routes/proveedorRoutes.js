@@ -7,11 +7,12 @@ const {
     actualizarProveedor,
     eliminarProveedor
 } = require('../controllers/proveedorController');
+const { verificarToken, permitirRoles } = require('../middlewares/authMiddleware');
 
-router.get('/', listarProveedores);
-router.get('/:id', obtenerProveedor);
-router.post('/', crearProveedor);
-router.put('/:id', actualizarProveedor);
-router.delete('/:id', eliminarProveedor);
+router.get('/', verificarToken, listarProveedores);
+router.get('/:id', verificarToken, obtenerProveedor);
+router.post('/', verificarToken, crearProveedor);
+router.put('/:id', verificarToken, actualizarProveedor);
+router.delete('/:id', verificarToken, permitirRoles('admin'), eliminarProveedor);
 
 module.exports = router;

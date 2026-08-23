@@ -7,11 +7,12 @@ const {
     actualizarProducto,
     eliminarProducto
 } = require('../controllers/productoController');
+const { verificarToken, permitirRoles } = require('../middlewares/authMiddleware');
 
-router.get('/', listarProductos);
-router.get('/:id', obtenerProducto);
-router.post('/', crearProducto);
-router.put('/:id', actualizarProducto);
-router.delete('/:id', eliminarProducto);
+router.get('/', verificarToken, listarProductos);
+router.get('/:id', verificarToken, obtenerProducto);
+router.post('/', verificarToken, crearProducto);
+router.put('/:id', verificarToken, actualizarProducto);
+router.delete('/:id', verificarToken, permitirRoles('admin'), eliminarProducto);
 
 module.exports = router;

@@ -7,11 +7,12 @@ const {
     actualizarCategoria,
     eliminarCategoria
 } = require('../controllers/categoriaController');
+const { verificarToken, permitirRoles } = require('../middlewares/authMiddleware');
 
-router.get('/', listarCategorias);
-router.get('/:id', obtenerCategoria);
-router.post('/', crearCategoria);
-router.put('/:id', actualizarCategoria);
-router.delete('/:id', eliminarCategoria);
+router.get('/', verificarToken, listarCategorias);
+router.get('/:id', verificarToken, obtenerCategoria);
+router.post('/', verificarToken, crearCategoria);
+router.put('/:id', verificarToken, actualizarCategoria);
+router.delete('/:id', verificarToken, permitirRoles('admin'), eliminarCategoria);
 
 module.exports = router;

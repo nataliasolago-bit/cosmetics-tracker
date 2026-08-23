@@ -5,9 +5,10 @@ const {
     inventarioPorProducto,
     stockBajo
 } = require('../controllers/inventarioController');
+const { verificarToken } = require('../middlewares/authMiddleware');
 
-router.get('/stock-bajo', stockBajo);
-router.get('/producto/:productoId', inventarioPorProducto);
-router.get('/', listarInventario);
+router.get('/stock-bajo', verificarToken, stockBajo);
+router.get('/producto/:productoId', verificarToken, inventarioPorProducto);
+router.get('/', verificarToken, listarInventario);
 
 module.exports = router;
