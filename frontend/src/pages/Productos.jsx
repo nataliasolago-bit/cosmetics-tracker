@@ -7,6 +7,7 @@ function Productos() {
   const [categorias, setCategorias] = useState([]);
   const [marcas, setMarcas] = useState([]);
   const [proveedores, setProveedores] = useState([]);
+  const [inventario, setInventario] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
@@ -29,20 +30,45 @@ function Productos() {
     };
   }
 
+  function esLoteVencido(fechaVencimiento) {
+    if (!fechaVencimiento) return false;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    return new Date(fechaVencimiento) < hoy;
+  }
+
+  function calcularStockPorProducto(productoId) {
+    const filas = inventario.filter((item) => item.producto_id === productoId);
+    let vigente = 0;
+    let vencido = 0;
+
+    filas.forEach((item) => {
+      if (esLoteVencido(item.Lote?.fecha_vencimiento)) {
+        vencido += item.cantidad_actual;
+      } else {
+        vigente += item.cantidad_actual;
+      }
+    });
+
+    return { total: vigente + vencido, vigente, vencido };
+  }
+
   async function cargarTodo() {
     setCargando(true);
     setError('');
     try {
-      const [resProductos, resCategorias, resMarcas, resProveedores] = await Promise.all([
+      const [resProductos, resCategorias, resMarcas, resProveedores, resInventario] = await Promise.all([
         api.get('/productos'),
         api.get('/categorias'),
         api.get('/marcas'),
         api.get('/proveedores'),
+        api.get('/inventario'),
       ]);
       setProductos(resProductos.data);
       setCategorias(resCategorias.data);
       setMarcas(resMarcas.data);
       setProveedores(resProveedores.data);
+      setInventario(resInventario.data);
     } catch (err) {
       setError('No se pudieron cargar los productos');
     } finally {
@@ -113,82 +139,14 @@ function Productos() {
     }
   }
 
-  if (cargando) return (
-    <p style={{
-      padding: '40px',
-      textAlign: 'center',
-      color: '#9b7b83',
-      fontSize: '16px',
-      fontFamily: 'Arial, sans-serif'
-    }}>
-      Cargando productos...
-    </p>
-  );
-
-  if (error) return (
-    <p style={{
-      margin: '32px',
-      padding: '16px 20px',
-      borderRadius: '12px',
-      backgroundColor: '#fff3f4',
-      border: '1px solid #f2d0d5',
-      color: '#b94d5c',
-      fontSize: '14px'
-    }}>
-      {error}
-    </p>
-  );
+  if (cargando) return <p>Cargando productos...</p>;
+  if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
   return (
-    <div style={{
-      minHeight: '100%',
-      padding: '32px',
-      background: 'linear-gradient(135deg, #fff9fa 0%, #fdf3f5 100%)',
-      fontFamily: 'Arial, sans-serif',
-      color: '#4a353b'
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '28px',
-        paddingBottom: '20px',
-        borderBottom: '1px solid #f0dfe3'
-      }}>
-        <div>
-          <h1 style={{
-            margin: 0,
-            fontSize: '32px',
-            fontWeight: '700',
-            color: '#593f47',
-            letterSpacing: '-0.5px'
-          }}>
-            Productos
-          </h1>
-
-          <p style={{
-            margin: '7px 0 0',
-            color: '#a5828b',
-            fontSize: '14px'
-          }}>
-            Gestiona tu catálogo de productos cosméticos
-          </p>
-        </div>
-
-        <button
-          onClick={abrirFormNuevo}
-          style={{
-            padding: '11px 20px',
-            border: 'none',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #d88c9a, #c87587)',
-            color: '#fff',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            boxShadow: '0 5px 14px rgba(200, 117, 135, 0.25)'
-          }}
-        >
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h1>Productos</h1>
+        <button onClick={abrirFormNuevo} style={{ padding: '8px 16px' }}>
           + Nuevo producto
         </button>
       </div>
@@ -206,318 +164,136 @@ function Productos() {
         />
       )}
 
-      <div style={{
-        backgroundColor: '#fff',
-        borderRadius: '18px',
-        overflow: 'hidden',
-        border: '1px solid #f1dfe4',
-        boxShadow: '0 8px 25px rgba(120, 76, 88, 0.07)'
-      }}>
-        <table style={{
-          width: '100%',
-          borderCollapse: 'collapse',
-          backgroundColor: '#fff'
-        }}>
-          <thead>
-            <tr style={{
-              textAlign: 'left',
-              backgroundColor: '#fdf4f6',
-              borderBottom: '1px solid #eedde2'
-            }}>
-              <th style={celdaCabecera}>Nombre</th>
-              <th style={celdaCabecera}>Categoría</th>
-              <th style={celdaCabecera}>Marca</th>
-              <th style={celdaCabecera}>Proveedor</th>
-              <th style={celdaCabecera}>Precio</th>
-              <th style={celdaCabecera}>Stock mínimo</th>
-              <th style={celdaCabecera}>Acciones</th>
-            </tr>
-          </thead>
+      <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'white' }}>
+        <thead>
+          <tr style={{ textAlign: 'left', borderBottom: '2px solid #ddd' }}>
+            <th style={celdaEstilo}>Nombre</th>
+            <th style={celdaEstilo}>Categoría</th>
+            <th style={celdaEstilo}>Marca</th>
+            <th style={celdaEstilo}>Proveedor</th>
+            <th style={celdaEstilo}>Precio</th>
+            <th style={celdaEstilo}>Stock</th>
+            <th style={celdaEstilo}>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {productos.map((p) => {
+            const stock = calcularStockPorProducto(p.id);
+            const soloVencido = stock.total > 0 && stock.vigente === 0 && stock.vencido > 0;
+            const parcialVencido = stock.vigente > 0 && stock.vencido > 0;
 
-          <tbody>
-            {productos.map((p) => (
-              <tr
-                key={p.id}
-                style={{
-                  borderBottom: '1px solid #f3e8eb'
-                }}
-              >
-                <td style={{
-                  ...celdaEstilo,
-                  color: '#513b42',
-                  fontWeight: '600'
-                }}>
-                  {p.nombre}
-                </td>
-
+            return (
+              <tr key={p.id} style={{ borderBottom: '1px solid #eee' }}>
+                <td style={celdaEstilo}>{p.nombre}</td>
+                <td style={celdaEstilo}>{p.Categorium?.nombre || p.Categoria?.nombre || '—'}</td>
+                <td style={celdaEstilo}>{p.Marca?.nombre || '—'}</td>
+                <td style={celdaEstilo}>{p.Proveedor?.nombre || '—'}</td>
+                <td style={celdaEstilo}>${Number(p.precio).toLocaleString()}</td>
                 <td style={celdaEstilo}>
-                  {p.Categorium?.nombre || p.Categoria?.nombre || '—'}
+                  <div>{stock.total} unidades (mín: {p.stock_minimo})</div>
+                  {soloVencido && (
+                    <div style={{ color: '#dc2626', fontWeight: 'bold', fontSize: '13px' }}>
+                      ⚠ Hay {stock.total} unidades, pero todas están vencidas
+                    </div>
+                  )}
+                  {parcialVencido && (
+                    <div style={{ color: '#f59e0b', fontSize: '13px' }}>
+                      ⚠ {stock.vencido} de {stock.total} unidades están vencidas
+                    </div>
+                  )}
                 </td>
-
                 <td style={celdaEstilo}>
-                  {p.Marca?.nombre || '—'}
-                </td>
-
-                <td style={celdaEstilo}>
-                  {p.Proveedor?.nombre || '—'}
-                </td>
-
-                <td style={{
-                  ...celdaEstilo,
-                  color: '#9f5d6d',
-                  fontWeight: '700'
-                }}>
-                  ${Number(p.precio).toLocaleString()}
-                </td>
-
-                <td style={{
-                  ...celdaEstilo,
-                  color: '#513b42',
-                  fontWeight: '600'
-                }}>
-                  {p.stock_minimo}
-                </td>
-
-                <td style={celdaEstilo}>
-                  <button
-                    onClick={() => abrirFormEditar(p)}
-                    style={{
-                      marginRight: '8px',
-                      padding: '8px 13px',
-                      border: '1px solid #e3c6ce',
-                      borderRadius: '8px',
-                      backgroundColor: '#fff8fa',
-                      color: '#a15e70',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      cursor: 'pointer'
-                    }}
-                  >
+                  <button onClick={() => abrirFormEditar(p)} style={{ marginRight: '8px' }}>
                     Editar
                   </button>
-
                   {esAdmin && (
-                    <button
-                      onClick={() => handleEliminar(p.id)}
-                      style={{
-                        padding: '8px 13px',
-                        border: '1px solid #f0d1d7',
-                        borderRadius: '8px',
-                        backgroundColor: '#fff7f8',
-                        color: '#c45f70',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        cursor: 'pointer'
-                      }}
-                    >
+                    <button onClick={() => handleEliminar(p.id)} style={{ color: 'red' }}>
                       Eliminar
                     </button>
                   )}
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            );
+          })}
+        </tbody>
+      </table>
 
-      {productos.length === 0 && (
-        <p style={{
-          marginTop: '18px',
-          padding: '20px',
-          textAlign: 'center',
-          color: '#a5828b',
-          fontSize: '14px',
-          backgroundColor: '#fff',
-          borderRadius: '14px',
-          border: '1px solid #f1dfe4'
-        }}>
-          No hay productos registrados.
-        </p>
-      )}
+      {productos.length === 0 && <p style={{ marginTop: '12px' }}>No hay productos registrados.</p>}
     </div>
   );
 }
 
-function FormularioProducto({
-  form,
-  categorias,
-  marcas,
-  proveedores,
-  editando,
-  onChange,
-  onSubmit,
-  onCancelar
-}) {
+function FormularioProducto({ form, categorias, marcas, proveedores, editando, onChange, onSubmit, onCancelar }) {
   return (
     <form
       onSubmit={onSubmit}
       style={{
-        backgroundColor: '#ffffff',
-        padding: '26px',
-        borderRadius: '18px',
-        marginBottom: '26px',
+        backgroundColor: 'white',
+        padding: '20px',
+        borderRadius: '8px',
+        marginBottom: '20px',
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: '20px',
-        border: '1px solid #f1dfe4',
-        boxShadow: '0 8px 25px rgba(120, 76, 88, 0.08)'
+        gap: '12px',
       }}
     >
-      <h3 style={{
-        gridColumn: '1 / -1',
-        margin: '0 0 2px',
-        color: '#593f47',
-        fontSize: '20px'
-      }}>
-        {editando ? 'Editar producto' : 'Nuevo producto'}
-      </h3>
+      <h3 style={{ gridColumn: '1 / -1' }}>{editando ? 'Editar producto' : 'Nuevo producto'}</h3>
 
       <div>
-        <label style={labelEstilo}>Nombre</label>
-
-        <input
-          name="nombre"
-          value={form.nombre}
-          onChange={onChange}
-          required
-          style={inputEstilo}
-        />
+        <label>Nombre</label><br />
+        <input name="nombre" value={form.nombre} onChange={onChange} required style={inputEstilo} />
       </div>
 
       <div>
-        <label style={labelEstilo}>Precio</label>
-
-        <input
-          name="precio"
-          type="number"
-          step="0.01"
-          value={form.precio}
-          onChange={onChange}
-          required
-          style={inputEstilo}
-        />
+        <label>Precio</label><br />
+        <input name="precio" type="number" step="0.01" value={form.precio} onChange={onChange} required style={inputEstilo} />
       </div>
 
       <div style={{ gridColumn: '1 / -1' }}>
-        <label style={labelEstilo}>Descripción</label>
-
-        <input
-          name="descripcion"
-          value={form.descripcion}
-          onChange={onChange}
-          style={inputEstilo}
-        />
+        <label>Descripción</label><br />
+        <input name="descripcion" value={form.descripcion} onChange={onChange} style={inputEstilo} />
       </div>
 
       <div>
-        <label style={labelEstilo}>Categoría</label>
-
-        <select
-          name="categoria_id"
-          value={form.categoria_id}
-          onChange={onChange}
-          required
-          style={inputEstilo}
-        >
+        <label>Categoría</label><br />
+        <select name="categoria_id" value={form.categoria_id} onChange={onChange} required style={inputEstilo}>
           <option value="">Selecciona...</option>
-
           {categorias.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nombre}
-            </option>
+            <option key={c.id} value={c.id}>{c.nombre}</option>
           ))}
         </select>
       </div>
 
       <div>
-        <label style={labelEstilo}>Marca</label>
-
-        <select
-          name="marca_id"
-          value={form.marca_id}
-          onChange={onChange}
-          required
-          style={inputEstilo}
-        >
+        <label>Marca</label><br />
+        <select name="marca_id" value={form.marca_id} onChange={onChange} required style={inputEstilo}>
           <option value="">Selecciona...</option>
-
           {marcas.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.nombre}
-            </option>
+            <option key={m.id} value={m.id}>{m.nombre}</option>
           ))}
         </select>
       </div>
 
       <div>
-        <label style={labelEstilo}>Proveedor</label>
-
-        <select
-          name="proveedor_id"
-          value={form.proveedor_id}
-          onChange={onChange}
-          required
-          style={inputEstilo}
-        >
+        <label>Proveedor</label><br />
+        <select name="proveedor_id" value={form.proveedor_id} onChange={onChange} required style={inputEstilo}>
           <option value="">Selecciona...</option>
-
           {proveedores.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.nombre}
-            </option>
+            <option key={p.id} value={p.id}>{p.nombre}</option>
           ))}
         </select>
       </div>
 
       <div>
-        <label style={labelEstilo}>Stock mínimo</label>
-
-        <input
-          name="stock_minimo"
-          type="number"
-          value={form.stock_minimo}
-          onChange={onChange}
-          required
-          style={inputEstilo}
-        />
+        <label>Stock mínimo</label><br />
+        <input name="stock_minimo" type="number" value={form.stock_minimo} onChange={onChange} required style={inputEstilo} />
       </div>
 
-      <div style={{
-        gridColumn: '1 / -1',
-        display: 'flex',
-        gap: '9px',
-        paddingTop: '2px'
-      }}>
-        <button
-          type="submit"
-          style={{
-            padding: '11px 19px',
-            border: 'none',
-            borderRadius: '10px',
-            backgroundColor: '#c87587',
-            color: '#fff',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer'
-          }}
-        >
+      <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '8px' }}>
+        <button type="submit" style={{ padding: '8px 16px' }}>
           {editando ? 'Guardar cambios' : 'Crear producto'}
         </button>
-
-        <button
-          type="button"
-          onClick={onCancelar}
-          style={{
-            padding: '11px 19px',
-            border: '1px solid #e3cbd1',
-            borderRadius: '10px',
-            backgroundColor: '#fff',
-            color: '#795d65',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer'
-          }}
-        >
+        <button type="button" onClick={onCancelar} style={{ padding: '8px 16px' }}>
           Cancelar
         </button>
       </div>
@@ -525,39 +301,7 @@ function FormularioProducto({
   );
 }
 
-const celdaCabecera = {
-  padding: '16px 18px',
-  color: '#73545d',
-  fontSize: '12px',
-  textTransform: 'uppercase',
-  letterSpacing: '0.7px',
-  fontWeight: '700'
-};
-
-const celdaEstilo = {
-  padding: '17px 18px',
-  color: '#806871',
-  fontSize: '14px'
-};
-
-const labelEstilo = {
-  display: 'block',
-  marginBottom: '7px',
-  color: '#725861',
-  fontSize: '13px',
-  fontWeight: '600'
-};
-
-const inputEstilo = {
-  width: '100%',
-  boxSizing: 'border-box',
-  padding: '12px 14px',
-  border: '1px solid #ead5da',
-  borderRadius: '10px',
-  outline: 'none',
-  backgroundColor: '#fffafb',
-  color: '#4a353b',
-  fontSize: '14px'
-};
+const celdaEstilo = { padding: '10px' };
+const inputEstilo = { width: '100%', padding: '8px' };
 
 export default Productos;
