@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -186,7 +186,19 @@ function Login() {
           >
             {cargando ? 'Ingresando...' : 'Ingresar'}
           </button>
-        </form>
+          </form>
+
+        <p style={{
+          textAlign: 'center',
+          marginTop: '20px',
+          color: '#a5828b',
+          fontSize: '13px'
+        }}>
+          ¿No tienes cuenta?{' '}
+          <Link to="/registro" style={{ color: '#c87587', fontWeight: '600', textDecoration: 'none' }}>
+            Regístrate
+          </Link>
+        </p>
       </div>
     </div>
   );

@@ -10,12 +10,14 @@ import Proveedores from './pages/Proveedores';
 import Lotes from './pages/Lotes';
 import Inventario from './pages/Inventario';
 import Movimientos from './pages/Movimientos';
+import Registro from './pages/Registro';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
 
         <Route
           element={

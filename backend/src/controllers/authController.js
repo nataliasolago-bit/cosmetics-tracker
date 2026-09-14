@@ -7,8 +7,8 @@ async function registrar(req, res) {
     try {
         const { nombre, email, password, rol_id } = req.body;
 
-        if (!nombre || !email || !password || !rol_id) {
-            return res.status(400).json({ error: 'Faltan campos obligatorios: nombre, email, password, rol_id' });
+        if (!nombre || !email || !password) {
+            return res.status(400).json({ error: 'Faltan campos obligatorios: nombre, email, password' });
         }
 
         // Verificar que el email no exista ya
@@ -17,10 +17,21 @@ async function registrar(req, res) {
             return res.status(409).json({ error: 'Ya existe un usuario con ese email' });
         }
 
-        // Verificar que el rol exista
-        const rol = await Rol.findByPk(rol_id);
-        if (!rol) {
-            return res.status(400).json({ error: 'El rol especificado no existe' });
+        let rolFinal = rol_id;
+
+        if (!rolFinal) {
+            // Si no se especifica un rol (caso normal: registro público), se asigna "operario" por defecto
+            const rolOperario = await Rol.findOne({ where: { nombre: 'operario' } });
+            if (!rolOperario) {
+                return res.status(500).json({ error: 'No se encontró el rol por defecto "operario"' });
+            }
+            rolFinal = rolOperario.id;
+        } else {
+            // Si se especifica un rol, verificamos que exista
+            const rol = await Rol.findByPk(rolFinal);
+            if (!rol) {
+                return res.status(400).json({ error: 'El rol especificado no existe' });
+            }
         }
 
         // Hashear la contraseña (nunca guardamos texto plano)
@@ -30,7 +41,7 @@ async function registrar(req, res) {
             nombre,
             email,
             password_hash,
-            rol_id
+            rol_id: rolFinal
         });
 
         // No devolvemos el password_hash en la respuesta
@@ -42,7 +53,6 @@ async function registrar(req, res) {
         res.status(500).json({ error: 'Error al registrar el usuario' });
     }
 }
-
 // Login
 async function login(req, res) {
     try {
