@@ -73,7 +73,7 @@ CREATE TABLE lotes (
     numero_lote NVARCHAR(50) NOT NULL,
     fecha_fabricacion DATE NOT NULL,
     fecha_vencimiento DATE NOT NULL,
-    cantidad_inicial INT NOT NULL,
+    cantidad_inicial INT NOT NULL CHECK (cantidad_inicial >= 0),
     CONSTRAINT FK_lotes_productos FOREIGN KEY (producto_id) REFERENCES productos(id),
     CONSTRAINT UQ_lote_producto UNIQUE (producto_id, numero_lote)
 );
@@ -84,7 +84,7 @@ CREATE TABLE inventario (
     id INT IDENTITY(1,1) PRIMARY KEY,
     producto_id INT NOT NULL,
     lote_id INT NOT NULL,
-    cantidad_actual INT NOT NULL DEFAULT 0,
+    cantidad_actual INT NOT NULL DEFAULT 0 CHECK (cantidad_actual >= 0),
     actualizado_en DATETIME NOT NULL DEFAULT GETDATE(),
     CONSTRAINT FK_inventario_productos FOREIGN KEY (producto_id) REFERENCES productos(id),
     CONSTRAINT FK_inventario_lotes FOREIGN KEY (lote_id) REFERENCES lotes(id),
@@ -98,7 +98,7 @@ CREATE TABLE movimientos (
     producto_id INT NOT NULL,
     lote_id INT NOT NULL,
     tipo NVARCHAR(10) NOT NULL,
-    cantidad INT NOT NULL,
+    cantidad INT NOT NULL CHECK (cantidad > 0),
     motivo NVARCHAR(255) NULL,
     usuario_id INT NOT NULL,
     fecha DATETIME NOT NULL DEFAULT GETDATE(),
@@ -107,4 +107,14 @@ CREATE TABLE movimientos (
     CONSTRAINT FK_movimientos_usuarios FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
     CONSTRAINT CK_movimientos_tipo CHECK (tipo IN ('entrada', 'salida'))
 );
+GO
+
+-- Índices para consultas frecuentes
+CREATE INDEX IX_lotes_fecha_vencimiento ON lotes(fecha_vencimiento);
+CREATE INDEX IX_movimientos_fecha ON movimientos(fecha);
+CREATE INDEX IX_movimientos_producto_fecha ON movimientos(producto_id,fecha);
+GO
+
+-- Roles iniciales requeridos por la aplicación
+INSERT INTO roles(nombre) VALUES ('admin'), ('operario');
 GO

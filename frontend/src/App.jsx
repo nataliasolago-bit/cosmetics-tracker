@@ -11,6 +11,7 @@ import Lotes from './pages/Lotes';
 import Inventario from './pages/Inventario';
 import Movimientos from './pages/Movimientos';
 import Registro from './pages/Registro';
+import Reportes from './pages/Reportes';
 
 function App() {
   return (
@@ -18,14 +19,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
-
-        <Route
-          element={
-            <RutaPrivada>
-              <Layout />
-            </RutaPrivada>
-          }
-        >
+        <Route element={<RutaPrivada><Layout /></RutaPrivada>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/productos" element={<Productos />} />
           <Route path="/categorias" element={<Categorias />} />
@@ -34,12 +28,11 @@ function App() {
           <Route path="/lotes" element={<Lotes />} />
           <Route path="/inventario" element={<Inventario />} />
           <Route path="/movimientos" element={<Movimientos />} />
+          <Route path="/reportes" element={<Reportes />} />
         </Route>
-
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
   );
 }
-
 export default App;

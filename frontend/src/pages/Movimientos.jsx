@@ -89,7 +89,7 @@ function Movimientos() {
           tipo: form.tipo,
           cantidad: Number(form.cantidad),
           motivo: form.motivo,
-          usuario_id: usuario.id,
+          // El backend toma el usuario desde el token JWT.
         });
       }
 

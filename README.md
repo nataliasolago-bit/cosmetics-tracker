@@ -1,127 +1,132 @@
-# Sistema Web de Gestión y Trazabilidad de Productos Cosméticos
+# Cosmetics Tracker — gestión y trazabilidad de productos cosméticos
 
-Aplicación web para el registro, control de inventario y trazabilidad de productos cosméticos, incluyendo gestión de categorías, marcas, proveedores, lotes y movimientos de inventario.
+Aplicación académica con **React + Vite**, API REST **Node.js + Express + Sequelize** y **Microsoft SQL Server Express**. Administra productos, categorías, marcas, proveedores, lotes, existencias, movimientos y reportes.
+
+> **Estado:** desarrollo universitario. Las funciones y las pruebas integradas deben verificarse en el entorno local antes de presentar la sustentación. No se incluyen contraseñas ni datos reales en el repositorio.
 
 ## Funcionalidades
 
-- Registro e inicio de sesión de usuarios
-- Roles y permisos (admin / operario)
-- CRUD de productos, categorías, marcas y proveedores
-- Gestión de lotes e inventario
-- Registro de entradas y salidas de productos
-- Historial de trazabilidad por producto/lote
-- Alertas de lotes vencidos, próximos a vencer y stock bajo
-- Búsqueda y filtrado de productos
-- Reportes básicos
+- Registro e inicio de sesión con JWT y contraseñas cifradas mediante hash bcrypt; el registro público asigna el rol `operario`.
+- Productos, categorías, marcas y proveedores; permisos según rol.
+- Lotes con fechas de fabricación/vencimiento, inventario por lote y trazabilidad.
+- Entradas y salidas con controles de stock e integridad de inventario.
+- Dashboard, alertas por stock bajo, lotes vencidos y próximos a vencer.
+- Reportes de inventario y movimientos, indicadores generales y exportación CSV (en la versión ampliada).
+- Datos ficticios de ejemplo para demostraciones académicas (script de carga separado).
 
 ## Tecnologías
 
-- **Frontend:** React (Vite) + Axios
-- **Backend:** Node.js + Express + Sequelize
-- **Base de datos:** MySQL
-- **Autenticación:** JWT + bcrypt
+| Capa | Tecnologías |
+| --- | --- |
+| Interfaz | React, Vite, Axios |
+| API REST | Node.js, Express |
+| Persistencia | Microsoft SQL Server (Express/Developer), Sequelize y Tedious |
+| Seguridad | JWT, bcrypt, autorización basada en roles |
+| Pruebas | Node.js test runner y pruebas funcionales manuales |
 
-## Estructura del proyecto
-cosmetics-tracker/
-├── backend/ # API REST (Node.js + Express)
-│ ├── src/
-│ │ ├── config/ # Conexión a la base de datos, variables de entorno
-│ │ ├── models/ # Modelos Sequelize
-│ │ ├── controllers/ # Lógica de negocio
-│ │ ├── routes/ # Definición de endpoints
-│ │ ├── middlewares/ # Autenticación, permisos, manejo de errores
-│ │ └── app.js
-│ └── .env
-├── frontend/ # Interfaz de usuario (React)
-└── README.md
+## Estructura
 
-## Instalación y configuración
-
-### Requisitos previos
-
-- [Node.js](https://nodejs.org) (versión LTS)
-- [MySQL Server](https://dev.mysql.com/downloads/mysql/)
-- Git
-
-### 1. Clonar el repositorio
-
-```bash
-git clone https://github.com/<tu-usuario>/cosmetics-tracker.git
-cd cosmetics-tracker
+```text
+backend/
+  database/schema.sql          # estructura inicial (instalación nueva)
+  database/seed_demo.sql       # datos de prueba ficticios (si está disponible)
+  src/config/                  # conexión SQL Server
+  src/controllers/             # lógica de negocio
+  src/models/                  # entidades Sequelize
+  src/routes/                  # endpoints
+  src/middlewares/             # validación de token y roles
+  test/                        # pruebas automatizadas
+frontend/src/                  # interfaz React
+docs/                          # documentación, guía y evidencias de entrega
 ```
 
-### 2. Configurar el backend
+## Instalación en Windows con SQL Server Express
 
-```bash
-cd backend
-npm install
-```
+**Requisitos:** Node.js 22 o posterior compatible con la versión de Vite, npm, SQL Server Express y `sqlcmd` (o SSMS).
 
-Crea un archivo `.env` en `backend/` con el siguiente contenido (ajusta los valores a tu entorno):
+1. Clona el repositorio: `git clone https://github.com/Codeforgeettttt/cosmetics-tracker.git`.
+2. Verifica que SQL Server Express funcione: `Get-Service -Name 'MSSQL$SQLEXPRESS'`.
+3. En una instalación **nueva y vacía**, ejecuta `backend/database/schema.sql` mediante `sqlcmd -S ".\\SQLEXPRESS" -E -C -b -i ".\\backend\\database\\schema.sql"`. **No repitas el esquema sobre una base que ya exista**.
+4. Configura autenticación SQL Server (modo mixto), un usuario SQL con permisos en `cosmetics_tracker` y TCP/IP. No utilices credenciales reales en el repositorio.
+5. Dentro de `backend`, copia `.env.example` a `.env` y ajusta tu instancia o puerto, usuario, contraseña y secreto JWT. Genera una clave con `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+
+Ejemplo de `backend/.env` **sin secretos reales**:
+
+```dotenv
 PORT=3000
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=tu_password
-DB_NAME=cosmetics_tracker
-JWT_SECRET=una_clave_secreta_larga_y_segura
-
-
-Crea la base de datos en MySQL:
-
-```sql
-CREATE DATABASE cosmetics_tracker;
+DB_SERVER=127.0.0.1
+DB_PORT=1433
+DB_DATABASE=cosmetics_tracker
+DB_USER=cosmetics_app
+DB_PASSWORD=REEMPLAZAR
+DB_ENCRYPT=false
+DB_TRUST_CERT=true
+JWT_SECRET=GENERAR_UN_SECRETO_ALEATORIO
+JWT_EXPIRES_IN=1d
 ```
 
-### 3. Configurar el frontend
+Si usas un puerto fijo (`DB_PORT`), no configures `DB_INSTANCE`. Si usas `DB_INSTANCE=SQLEXPRESS`, comprueba que SQL Server Browser resuelva la instancia. La aplicación necesita leer correctamente estas variables en `backend/src/config/database.js`.
 
-```bash
-cd ../frontend
-npm install
-```
+**PowerShell (npm bloqueado por política de ejecución):** emplea `npm.cmd` en lugar de `npm`.
 
-## Cómo ejecutar el proyecto
+### Ejecutar backend
 
-### Backend
-
-```bash
+```powershell
 cd backend
-npm run dev
+npm.cmd install
+npm.cmd start
 ```
 
-El servidor quedará escuchando en `http://localhost:3000`.
+API: `http://localhost:3000`. Verificación: `http://localhost:3000/api/health`.
 
-### Frontend
+### Ejecutar frontend
 
-```bash
+En **otra terminal**:
+
+```powershell
 cd frontend
-npm run dev
+npm.cmd install
+npm.cmd run dev
 ```
 
-La aplicación quedará disponible en `http://localhost:5173` (puerto por defecto de Vite).
+Navegador: `http://localhost:5173/` (o puerto que indique Vite).
 
-## Endpoints principales de la API
+### Cargar datos de demostración
 
-Todas las rutas (excepto registro/login) requieren el header:
-Authorization: Bearer <token>
+Solo después de crear las tablas y registrar al menos un usuario:
 
+```powershell
+sqlcmd -S "tcp:localhost,1433" -E -C -d cosmetics_tracker -b -i ".\\backend\\database\\seed_demo.sql"
+```
 
-| Método | Ruta | Descripción | Rol requerido |
-|--------|------|--------------|----------------|
-| POST | `/api/auth/registro` | Registrar usuario | Público |
-| POST | `/api/auth/login` | Iniciar sesión | Público |
-| GET/POST/PUT | `/api/productos` | CRUD de productos | Autenticado |
-| DELETE | `/api/productos/:id` | Eliminar producto | Admin |
-| GET/POST/PUT | `/api/categorias` | CRUD de categorías | Autenticado |
-| GET/POST/PUT | `/api/marcas` | CRUD de marcas | Autenticado |
-| GET/POST/PUT | `/api/proveedores` | CRUD de proveedores | Autenticado |
-| GET/POST/PUT | `/api/lotes` | CRUD de lotes | Autenticado |
-| GET | `/api/lotes/vencidos` | Lotes vencidos | Autenticado |
-| GET | `/api/lotes/proximos-a-vencer` | Lotes próximos a vencer | Autenticado |
-| GET | `/api/inventario` | Listado de inventario | Autenticado |
-| GET | `/api/inventario/stock-bajo` | Productos con stock bajo | Autenticado |
-| POST | `/api/movimientos` | Registrar entrada/salida | Autenticado |
-| GET | `/api/movimientos/producto/:id` | Historial por producto | Autenticado |
-| GET | `/api/movimientos/lote/:id` | Historial por lote | Autenticado |
+El script debe ser la **versión corregida** que no inserta movimientos de cantidad cero. Los registros son ficticios y no sustituyen un respaldo real. Si el archivo no está en tu copia del repositorio, úsalo desde el paquete de entrega actualizado.
+
+## Rutas principales
+
+| Método | Ruta | Uso |
+| --- | --- | --- |
+| POST | `/api/auth/registro` | Registro público |
+| POST | `/api/auth/login` | Autenticación |
+| GET | `/api/productos` | Productos |
+| GET | `/api/lotes` | Lotes |
+| GET | `/api/inventario` | Inventario |
+| GET/POST | `/api/movimientos` | Historial y movimientos |
+| GET | `/api/reportes/resumen` | Métricas (versión ampliada) |
+| GET | `/api/reportes/exportar/inventario` | CSV (versión ampliada) |
+| GET | `/api/reportes/exportar/movimientos` | CSV (versión ampliada) |
+
+Las rutas protegidas requieren `Authorization: Bearer <token>`.
+
+## Pruebas y evidencia
+
+- `cd backend; npm.cmd test` para ejecutar las pruebas automatizadas disponibles.
+- `cd frontend; npm.cmd run build` para comprobar compilación.
+- Probar manualmente login, altas de productos y lotes, movimientos, control de stock, indicadores y exportaciones.
+- La entrega por **CANVAS** requiere un video grupal de **10 minutos en español**, código fuente y **exportación real de la base de datos** (esquema + datos). Un archivo `seed_demo.sql` por sí solo no demuestra el estado real de la base.
+
+## Seguridad
+
+Nunca subas `.env`, secretos JWT, contraseñas SQL, `node_modules`, respaldos privados ni datos personales reales. Las credenciales expuestas deben rotarse. Revisa el contenido de un commit antes de publicarlo.
 
 ## Autores
 

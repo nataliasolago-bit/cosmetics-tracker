@@ -23,11 +23,9 @@ const Usuario = sequelize.define('Usuario', {
     rol_id: {
         type: DataTypes.INTEGER,
         allowNull: false
-    },
-    creado_en: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW
     }
+    // creado_en lo asigna DEFAULT GETDATE() de SQL Server.
+    // Se omite del modelo para que Sequelize no envíe fechas con offset.
 }, {
     tableName: 'usuarios',
     timestamps: false

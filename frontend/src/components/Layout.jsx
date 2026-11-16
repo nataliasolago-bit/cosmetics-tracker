@@ -202,6 +202,12 @@ function Layout() {
           >
             ♡ &nbsp; Movimientos
           </Link>
+          <Link
+            to="/reportes"
+            style={{ color: '#fff', textDecoration: 'none', padding: '11px 13px', borderRadius: '10px', fontSize: '14px', fontWeight: '500' }}
+          >
+            ♡ &nbsp; Reportes y métricas
+          </Link>
         </nav>
 
         {/* Usuario */}
